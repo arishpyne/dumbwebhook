@@ -30,15 +30,20 @@ def catch_all(path):
         try:
             request_json = request.json
         except ValueError:
-            data_to_display = request_data
+            data_to_display = request.data
         else:
             data_to_display = request_json
+    else:
+        data_to_display = request.data
 
     display_message = "Request data length: {}".format(request_data_size)
     if should_display_request_data:
         display_message += "\n{}".format(pformat(data_to_display))
 
     logging.info(display_message)
+
+    if app.config['show_headers']:
+        logging.info("Request headers:\n{}".format("\n".join(("{}:\t{}".format(k, v) for k, v in request.headers))))
 
     return make_response("OK", 200)
 
@@ -47,10 +52,12 @@ def catch_all(path):
 @click.command()
 @click.option('--max-len-to-display', default=5000)
 @click.option('--use-json', type=bool, default=True)
+@click.option('--show-headers', type=bool, default=False)
 @click.option('--port', type=int, default=6000)
-def run(max_len_to_display, use_json, port):
+def run(max_len_to_display, use_json, port, show_headers):
     app.config['max_len_to_display'] = max_len_to_display
     app.config['use_json'] = use_json
+    app.config['show_headers'] = show_headers
     app.run(port=port)
 
 
